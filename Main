@@ -1,0 +1,76 @@
+/*Air Mouse Program*/
+#include "mbed.h" // include mbed library
+ #include "USBMouse.h" // include USB Mouse library
+ #include "MMA7660.h" //include accelerometer library
+ #include "C12832.h" // include LCD library
+ 
+ 
+ 
+ C12832 lcd(D11, D13, D12, D7, D10); //lcd pin
+ MMA7660 MMA(D14,D15);// accelerometer pins
+ USBMouse mouse; // define USBMouseinterface
+ 
+ 
+ int constant=15; //constant variable
+ DigitalIn leftbutton(SW2); // Assign Digital Input of SW2 for left button Click
+ DigitalIn rightbutton(SW3); // Assign Digital Input of SW3 for right button click
+
+
+// Joystick Pins
+ DigitalIn up(A2); //for scrolling
+ DigitalIn down(A3); //for scrolling
+ DigitalIn decreasesens (A4); //increasing sensitivity
+ DigitalIn increasesens (A5); // decreasing sensitivity
+ float data[3]={MMA.x(),MMA.y()}; // Save X and Y coordinates in array
+
+
+void scroll_joy() { // function scroll a page
+ if(down==1) {
+ mouse.scroll(-down); //down direction is 1 then scroll up
+ }
+ else if (up==1) { //if up direction is 1 then scroll down
+ mouse.scroll(up); 
+}
+}
+
+
+void mouse_clicks(){ // function for left and right button mouse clicks
+ if(leftbutton==0){ // SW2 is pressed 
+ mouse.click(MOUSE_LEFT); //then mouse left click
+ }
+ else if (rightbutton==0){ //SW3 is pressed
+ mouse.click(MOUSE_RIGHT); //then mouse right click
+ }
+ }
+
+void mouse_sensitivity(){ // Control mouse sensitivity
+ if(increasesens==1){ //if right direction is 1
+ constant=constant+10; //increment by 10 ,increasing sensitivity
+ }
+ else if((decreasesens==1)&&(constant>10)){ //else if left direction is 1 and constant greater than 10
+ constant=constant−10; 
+//decrement constant by 10 , decreasing sensitivity
+ }
+}
+
+
+int main(){
+lcd.cls(); //clear display buffer
+lcd.locate(0,3);
+lcd.printf("Have Fun using Air Mouse!");
+ while (1)
+{
+MMA.readData(data); //read values in data array
+float posx=data[1]; //store values in variable posx
+float posy=data[0]; //store values in variable posy
+lcd.locate(0,14);
+lcd.printf("x=%.2f y=%.2f ",MMA.x(), MMA.y()); // print values of x andy on lcd screen
+float x= constant*(posx); // Multipluy x values with a constant
+float y= constant*(posy); //multipluy y values with constant
+mouse.move(x,y); // move cursor accrording to x and y
+scroll_joy(); //call functtion
+mouse_clicks(); // call function
+mouse_sensitivity(); //call function
+wait(0.2); //wait 0.2 sec
+}
+}
